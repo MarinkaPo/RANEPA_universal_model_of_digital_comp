@@ -62,7 +62,7 @@ st.markdown('''<h1 style='text-align: center; color: black;'
             >Универсальная модель цифровых компетенций</h1>''', 
             unsafe_allow_html=True)
 
-main_table = pd.read_excel(open('../вспомогательная таб для циф компетенций.xlsx', 'rb'), sheet_name='главная таблица') 
+main_table = pd.read_excel(open('вспомогательная таб для циф компетенций.xlsx', 'rb'), sheet_name='главная таблица') 
 
 list_of_universities = sorted(list(main_table[main_table['Место обучения'].notnull()]['Место обучения'].unique()), reverse=False)
 
@@ -77,7 +77,7 @@ if choose_university:
 
     if choose_direction_of_study:
         # ПОДБОР ВАКАНСИЙ ПО НАПРАВЛЕНИЮ:
-        skills_table = pd.read_excel(open('../вспомогательная таб для циф компетенций.xlsx', 'rb'), sheet_name='навыки таблица') 
+        skills_table = pd.read_excel(open('вспомогательная таб для циф компетенций.xlsx', 'rb'), sheet_name='навыки таблица') 
         columns_with_vacancies = skills_table.columns.tolist()[-4:]
         list_of_vacancies = sorted(list(skills_table.loc[(skills_table['Направление']==choose_direction_of_study[0])].reset_index()['ссылки'].unique()), reverse=False) # ДОБАВИТЬ И ОСТАЛЬНЫЕ ЧЕРЕЗ columns_with_vacancies!!!!
         # st.write(list_of_vacancies)
