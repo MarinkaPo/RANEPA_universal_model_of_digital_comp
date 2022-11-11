@@ -1,0 +1,1 @@
+# RANEPA_universal_model_of_digital_comp
