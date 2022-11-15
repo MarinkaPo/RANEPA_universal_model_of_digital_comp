@@ -76,6 +76,42 @@ if choose_university:
     choose_direction_of_study = st.multiselect(('Выберите направление подготовки'), list_of_direction_of_study)
 
     if choose_direction_of_study:
+
+        skills_table = pd.read_excel(open('вспомогательная_таб_для_циф_компетенций.xlsx', 'rb'), sheet_name='навыки таблица') 
+
+        # подбор цифровых компетенций по направлению из 2ой вкладки 'навыки таблица':    
+        list_of_digit_competences = list(skills_table.loc[(skills_table['Направление']==choose_direction_of_study[0])].reset_index().iloc[0,1:-5])
+        list_of_digit_competences = [vacancy for vacancy in list_of_digit_competences if 'str' in str(type(vacancy))]
+        list_of_digit_competences = list(set(list_of_digit_competences))
+        # st.write(list_of_digit_competences)
+        unique_digit_competences = []
+        for competences_sequence in list_of_digit_competences:
+            competences_sequence = re.sub('\d\d\) |\d\d\)|\d\) |\d\)', '', str(competences_sequence))
+            competence_names = competences_sequence.split('\n')
+            unique_digit_competences.extend(competence_names)
+
+        # подбор вакансий по направлению из 2ой вкладки 'навыки таблица':
+        # list_of_vacancies = sorted(list(skills_table.loc[(skills_table['Направление']==choose_direction_of_study[0])].reset_index()['ссылки'].unique()), reverse=False) # ДОБАВИТЬ И ОСТАЛЬНЫЕ ЧЕРЕЗ columns_with_vacancies!!!!  
+        list_of_vacancies = list(skills_table.loc[(skills_table['Направление']==choose_direction_of_study[0])].reset_index().iloc[0,-4:])
+        list_of_vacancies = [vacancy for vacancy in list_of_vacancies if 'str' in str(type(vacancy))]
+        list_of_vacancies = list(set(list_of_vacancies))
+        # st.write(list_of_vacancies)
+        
+        # подбор кейсов для обучения по направлению из основной вкладки:
+        list_of_cases= sorted(list(main_table.loc[(main_table['Направление']==choose_direction_of_study[0])].reset_index()['Кейсы лаборатории'].unique()), reverse=False)
+        unique_cases = []
+        for cases_sequence in list_of_cases:
+            cases_sequence = re.sub('\d\d\) |\d\d\)|\d\) |\d\)', '', str(cases_sequence))
+            cases_names = cases_sequence.split('\n')
+            unique_cases.extend(cases_names)
+        unique_cases = sorted(list(set(unique_cases)), reverse=False)
+        if '' in unique_cases:
+            unique_cases.remove('')
+        elif ' ' in unique_cases:
+            unique_cases.remove(' ')
+
+
+
         # ПОДБОР ВАКАНСИЙ ПО НАПРАВЛЕНИЮ:
         skills_table = pd.read_excel(open('вспомогательная_таб_для_циф_компетенций.xlsx', 'rb'), sheet_name='навыки таблица') 
         columns_with_vacancies = skills_table.columns.tolist()[-4:]
@@ -117,20 +153,43 @@ if choose_university:
 
 # ДЕЛАЕМ ПРЕДЛОЖЕНИЕ АБИТУРИЕНТУ:                    
 if choose_university != [] and choose_direction_of_study != [] and choose_profile != [] and choose_profession != [] :
-    st.write('')
-    st.markdown('''<h5 style='text-align: left; color: black;'>Образовательные кейсы, подходящие под выбранные параметры обучения:</h5>''', unsafe_allow_html=True)
-    st.write('')
+    # st.write('')
+    # st.markdown('''<h5 style='text-align: left; color: black;'>Образовательные кейсы, подходящие под выбранные параметры обучения:</h5>''', unsafe_allow_html=True)
+    # st.write('')
 
-    for i in range(len(unique_cases)):
-        col1, col2 = st.columns([1,1])
-        col1.write(unique_cases[i])        
-        qr_code_path = show_required_qr_code(unique_cases[i])
-        col2.image(qr_code_path, width=100) #width=450  , use_column_width='auto'
+    # for i in range(len(unique_cases)):
+    #     col1, col2 = st.columns([1,1])
+    #     col1.write(unique_cases[i])        
+    #     qr_code_path = show_required_qr_code(unique_cases[i])
+    #     col2.image(qr_code_path, width=100) #width=450  , use_column_width='auto'
 
+    # st.write('')
+    # st.markdown('''<h5 style='text-align: left; color: black;'>Вакансии, подходящие по направлению обучения:</h5>''', unsafe_allow_html=True)
+    # st.write('')
+    # st.write(f'[Ссылка на вакансию]({list_of_vacancies[0]})')
+
+
+    # выводим найденные вакансии:
     st.write('')
     st.markdown('''<h5 style='text-align: left; color: black;'>Вакансии, подходящие по направлению обучения:</h5>''', unsafe_allow_html=True)
     st.write('')
-    st.write(f'[Ссылка на вакансию]({list_of_vacancies[0]})')
+    for i in range(len(list_of_vacancies)):
+        st.write(f'[Ссылка на вакансию {i+1}]({list_of_vacancies[i]})')
+    st.write('')
+
+    st.markdown('''<h5 style='text-align: left; color: black;'>Навыки и инструменты, которые вы освоите: </h5>''', unsafe_allow_html=True)
+    # выводим найденные цифровые компетенции:
+    for i in range(len(unique_digit_competences)):
+        st.write(f'{i+1}) {unique_digit_competences[i]}')
+    st.write('')
+
+    # выводим найденные кейсы:
+    st.markdown('''<h5 style='text-align: left; color: black;'>Образовательные кейсы, подходящие по направлению обучения:</h5>''', unsafe_allow_html=True)
+    for i in range(len(unique_cases)):
+        col1, col2 = st.columns([4,1])
+        col1.write(unique_cases[i])        
+        qr_code_path = show_required_qr_code(unique_cases[i])
+        col2.image(qr_code_path, width=100) #width=450  , use_column_width='auto'
     
 else:
     pass
