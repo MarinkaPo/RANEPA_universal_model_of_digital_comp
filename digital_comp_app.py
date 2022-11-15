@@ -64,76 +64,153 @@ st.markdown('''<h1 style='text-align: center; color: black;'
 
 main_table = pd.read_excel(open('вспомогательная_таб_для_циф_компетенций.xlsx', 'rb'), sheet_name='главная таблица') 
 
-list_of_universities = sorted(list(main_table[main_table['Место обучения'].notnull()]['Место обучения'].unique()), reverse=False)
+# -------------------ВЫБОР НАПРАВЛЕНИЯ-------------------:
+list_of_direction_of_study = sorted(list(main_table[main_table['Направление'].notnull()]['Направление'].unique()), reverse=False)
+# добавялем 'Безопасность сферы государственных услуг' в конец списка:
+if 'Безопасность сферы государственных услуг' in list_of_direction_of_study:
+    list_of_direction_of_study.remove('Безопасность сферы государственных услуг')
+    list_of_direction_of_study.append('Безопасность сферы государственных услуг')
+choose_direction_of_study = st.multiselect(('Выберите направление подготовки:'), list_of_direction_of_study)
+if choose_direction_of_study:
 
-# ВЫБОР УНИВЕРСИТЕТА/ВУЗА/...:
-choose_university = st.multiselect(('Выберите место обучения'), list_of_universities)
+    skills_table = pd.read_excel(open('вспомогательная_таб_для_циф_компетенций.xlsx', 'rb'), sheet_name='навыки таблица') 
 
-if choose_university:
-    # ВЫБОР НАПРАВЛЕНИЯ:
-    list_of_direction_of_study = sorted(list(main_table.loc[main_table['Место обучения']==choose_university[0]].reset_index()['Направление'].unique()), reverse=False)
-    # list_of_direction_of_study = sorted(list(main_table[main_table['Направление'].notnull()]['Направление'].unique()), reverse=False)
-    choose_direction_of_study = st.multiselect(('Выберите направление подготовки'), list_of_direction_of_study)
+    # подбор цифровых компетенций по направлению из 2ой вкладки 'навыки таблица':    
+    list_of_digit_competences = list(skills_table.loc[(skills_table['Направление']==choose_direction_of_study[0])].reset_index().iloc[0,1:-5])
+    list_of_digit_competences = [vacancy for vacancy in list_of_digit_competences if 'str' in str(type(vacancy))]
+    list_of_digit_competences = list(set(list_of_digit_competences))
+    # st.write(list_of_digit_competences)
+    unique_digit_competences = []
+    for competences_sequence in list_of_digit_competences:
+        competences_sequence = re.sub('\d\d\) |\d\d\)|\d\) |\d\)', '', str(competences_sequence))
+        competence_names = competences_sequence.split('\n')
+        unique_digit_competences.extend(competence_names)
 
-    if choose_direction_of_study:
-        # ПОДБОР ВАКАНСИЙ ПО НАПРАВЛЕНИЮ:
-        skills_table = pd.read_excel(open('вспомогательная_таб_для_циф_компетенций.xlsx', 'rb'), sheet_name='навыки таблица') 
-        columns_with_vacancies = skills_table.columns.tolist()[-4:]
-        list_of_vacancies = sorted(list(skills_table.loc[(skills_table['Направление']==choose_direction_of_study[0])].reset_index()['ссылки'].unique()), reverse=False) # ДОБАВИТЬ И ОСТАЛЬНЫЕ ЧЕРЕЗ columns_with_vacancies!!!!
-        # st.write(list_of_vacancies)
-
-        # ВЫБОР ПРОФИЛЯ:
-        list_of_profiles= sorted(list(main_table.loc[(main_table['Место обучения']==choose_university[0]) & (main_table['Направление']==choose_direction_of_study[0])].reset_index()['Профиль'].unique()), reverse=False)
-        # st.write(list_of_profiles)
-        choose_profile = st.multiselect(('Выберите профиль'), list_of_profiles)
-
-        if choose_profile:
-            # ВЫБОР ПРОФЕССИИ:
-            list_of_professions = sorted(list(main_table.loc[(main_table['Место обучения']==choose_university[0]) & (main_table['Направление']==choose_direction_of_study[0]) & (main_table['Профиль']==choose_profile[0])].reset_index()['Профессия'].unique()), reverse=False)
-            unique_professions = []
-            for professions_sequence in list_of_professions:
-                proffessoions_names= professions_sequence.split('\n')
-                unique_professions.extend(proffessoions_names)
-            unique_professions = sorted(list(set(unique_professions)), reverse=False)
-            if '' in unique_professions:
-                unique_professions.remove('')
-            elif ' ' in unique_professions:
-                unique_professions.remove(' ')
-            choose_profession = st.multiselect(('Выберите профессию'), unique_professions)
-
-            # ВЫБОР КЕЙСОВ ДЛЯ ОБУЧЕНИЯ:
-            if choose_profession:
-                list_of_cases= sorted(list(main_table.loc[(main_table['Место обучения']==choose_university[0]) & (main_table['Направление']==choose_direction_of_study[0]) & (main_table['Профиль']==choose_profile[0]) & (main_table['Профессия'].str.contains(choose_profession[0]))].reset_index()['Кейсы лаборатории'].unique()), reverse=False)
-                unique_cases = []
-                for cases_sequence in list_of_cases:
-                    cases_sequence = re.sub('\d\d\) |\d\d\)|\d\) |\d\)', '', cases_sequence)
-                    cases_names = cases_sequence.split('\n')
-                    unique_cases.extend(cases_names)
-                unique_cases = sorted(list(set(unique_cases)), reverse=False)
-                if '' in unique_cases:
-                    unique_cases.remove('')
-                elif ' ' in unique_cases:
-                    unique_cases.remove(' ')
-
-# ДЕЛАЕМ ПРЕДЛОЖЕНИЕ АБИТУРИЕНТУ:                    
-if choose_university != [] and choose_direction_of_study != [] and choose_profile != [] and choose_profession != [] :
-    st.write('')
-    st.markdown('''<h5 style='text-align: left; color: black;'>Образовательные кейсы, подходящие под выбранные параметры обучения:</h5>''', unsafe_allow_html=True)
-    st.write('')
-
-    for i in range(len(unique_cases)):
-        col1, col2 = st.columns([1,1])
-        col1.write(unique_cases[i])        
-        qr_code_path = show_required_qr_code(unique_cases[i])
-        col2.image(qr_code_path, width=100) #width=450  , use_column_width='auto'
-
-    st.write('')
-    st.markdown('''<h5 style='text-align: left; color: black;'>Вакансии, подходящие по направлению обучения:</h5>''', unsafe_allow_html=True)
-    st.write('')
-    st.write(f'[Ссылка на вакансию]({list_of_vacancies[0]})')
+    # подбор вакансий по направлению из 2ой вкладки 'навыки таблица':
+    # list_of_vacancies = sorted(list(skills_table.loc[(skills_table['Направление']==choose_direction_of_study[0])].reset_index()['ссылки'].unique()), reverse=False) # ДОБАВИТЬ И ОСТАЛЬНЫЕ ЧЕРЕЗ columns_with_vacancies!!!!  
+    list_of_vacancies = list(skills_table.loc[(skills_table['Направление']==choose_direction_of_study[0])].reset_index().iloc[0,-4:])
+    list_of_vacancies = [vacancy for vacancy in list_of_vacancies if 'str' in str(type(vacancy))]
+    list_of_vacancies = list(set(list_of_vacancies))
+    # st.write(list_of_vacancies)
     
-else:
-    pass
+    # подбор кейсов для обучения по направлению из основной вкладки:
+    list_of_cases= sorted(list(main_table.loc[(main_table['Направление']==choose_direction_of_study[0])].reset_index()['Кейсы лаборатории'].unique()), reverse=False)
+    unique_cases = []
+    for cases_sequence in list_of_cases:
+        cases_sequence = re.sub('\d\d\) |\d\d\)|\d\) |\d\)', '', str(cases_sequence))
+        cases_names = cases_sequence.split('\n')
+        unique_cases.extend(cases_names)
+    unique_cases = sorted(list(set(unique_cases)), reverse=False)
+    if '' in unique_cases:
+        unique_cases.remove('')
+    elif ' ' in unique_cases:
+        unique_cases.remove(' ')
+
+    # выпадающее окно с предложением (выбрано направление подготовки):
+    with st.expander(label='Посмотреть подходящие предложения:'):
+        # выводим найденные вакансии:
+        st.write('')
+        st.markdown('''<h5 style='text-align: left; color: black;'>Вакансии, подходящие по направлению обучения:</h5>''', unsafe_allow_html=True)
+        st.write('')
+        for i in range(len(list_of_vacancies)):
+            st.write(f'[Ссылка на вакансию {i+1}]({list_of_vacancies[i]})')
+        st.write('')
+        # выводим найденные кейсы:
+        st.markdown('''<h5 style='text-align: left; color: black;'>Образовательные кейсы, подходящие по направлению обучения:</h5>''', unsafe_allow_html=True)
+        for i in range(len(unique_cases)):
+            col1, col2 = st.columns([4,1])
+            col1.write(unique_cases[i])        
+            qr_code_path = show_required_qr_code(unique_cases[i])
+            col2.image(qr_code_path, width=100) #width=450  , use_column_width='auto'
+
+
+    #-------------------ВЫБОР ПРОФИЛЯ-------------------:
+    list_of_profiles= sorted(list(main_table.loc[(main_table['Направление']==choose_direction_of_study[0])].reset_index()['Профиль'].unique()), reverse=False)
+    # list_of_profiles= sorted(list(main_table.loc[(main_table['Место обучения']==choose_university[0]) & (main_table['Направление']==choose_direction_of_study[0])].reset_index()['Профиль'].unique()), reverse=False)
+    # st.write(list_of_profiles)
+    choose_profile = st.multiselect(('Выберите профиль'), list_of_profiles)
+    if choose_profile:
+
+        #-------------------ВЫБОР ПРОФЕССИИ-------------------:
+        list_of_professions= sorted(list(main_table.loc[(main_table['Направление']==choose_direction_of_study[0]) & (main_table['Профиль']==choose_profile[0])].reset_index()['Профессия'].unique()), reverse=False)
+        # list_of_professions = sorted(list(main_table.loc[(main_table['Место обучения']==choose_university[0]) & (main_table['Направление']==choose_direction_of_study[0]) & (main_table['Профиль']==choose_profile[0])].reset_index()['Профессия'].unique()), reverse=False)
+        unique_professions = []
+        for professions_sequence in list_of_professions:
+            proffessoions_names= professions_sequence.split('\n')
+            unique_professions.extend(proffessoions_names)
+        unique_professions = sorted(list(set(unique_professions)), reverse=False)
+        if '' in unique_professions:
+            unique_professions.remove('')
+        elif ' ' in unique_professions:
+            unique_professions.remove(' ')
+        choose_profession = st.multiselect(('Выберите профессию'), unique_professions)
+
+        if choose_profession:
+            # ВЫБОР УНИВЕРСИТЕТА/ВУЗА/...:
+            list_of_universities = sorted(list(main_table.loc[(main_table['Направление']==choose_direction_of_study[0]) & (main_table['Профиль']==choose_profile[0]) & (main_table['Профессия'].str.contains(choose_profession[0]))].reset_index()['Место обучения'].unique()), reverse=False)
+            # list_of_universities = sorted(list(main_table[main_table['Место обучения'].notnull()]['Место обучения'].unique()), reverse=False)
+            # choose_university = st.multiselect(('Выберите место обучения'), list_of_universities)
+            
+            st.markdown('''<h5 style='text-align: left; color: black;'>Образовательные подразделения РАНХиГС, подходящие вам:</h5>''', unsafe_allow_html=True)
+            for university_name in list_of_universities:
+                st.write(university_name)
+
+            st.markdown('''<h5 style='text-align: left; color: black;'>Навыки и инструменты, которые вы освоите: </h5>''', unsafe_allow_html=True)
+            # for university_name in list_of_universities:
+            #     st.write(list_of_digit_competences)
+            # выводим найденные цифровые компетенции:
+            for i in range(len(unique_digit_competences)):
+                st.write(f'{i+1}) {unique_digit_competences[i]}')
+            st.write('')
+
+
+
+
+
+# if choose_university:
+#     # ВЫБОР НАПРАВЛЕНИЯ:
+#     list_of_direction_of_study = sorted(list(main_table.loc[main_table['Место обучения']==choose_university[0]].reset_index()['Направление'].unique()), reverse=False)
+#     # list_of_direction_of_study = sorted(list(main_table[main_table['Направление'].notnull()]['Направление'].unique()), reverse=False)
+#     choose_direction_of_study = st.multiselect(('Выберите направление подготовки'), list_of_direction_of_study)
+
+#     
+
+
+#             # ВЫБОР КЕЙСОВ ДЛЯ ОБУЧЕНИЯ:
+#             if choose_profession:
+#                 list_of_cases= sorted(list(main_table.loc[(main_table['Место обучения']==choose_university[0]) & (main_table['Направление']==choose_direction_of_study[0]) & (main_table['Профиль']==choose_profile[0]) & (main_table['Профессия'].str.contains(choose_profession[0]))].reset_index()['Кейсы лаборатории'].unique()), reverse=False)
+#                 unique_cases = []
+#                 for cases_sequence in list_of_cases:
+#                     cases_sequence = re.sub('\d\d\) |\d\d\)|\d\) |\d\)', '', cases_sequence)
+#                     cases_names = cases_sequence.split('\n')
+#                     unique_cases.extend(cases_names)
+#                 unique_cases = sorted(list(set(unique_cases)), reverse=False)
+#                 if '' in unique_cases:
+#                     unique_cases.remove('')
+#                 elif ' ' in unique_cases:
+#                     unique_cases.remove(' ')
+
+
+
+# # ДЕЛАЕМ ПРЕДЛОЖЕНИЕ АБИТУРИЕНТУ:                    
+# if choose_university != [] and choose_direction_of_study != [] and choose_profile != [] and choose_profession != [] :
+#     st.write('')
+#     st.markdown('''<h5 style='text-align: left; color: black;'>Образовательные кейсы, подходящие под выбранные параметры обучения:</h5>''', unsafe_allow_html=True)
+#     st.write('')
+
+#     for i in range(len(unique_cases)):
+#         col1, col2 = st.columns([1,1])
+#         col1.write(unique_cases[i])        
+#         qr_code_path = show_required_qr_code(unique_cases[i])
+#         col2.image(qr_code_path, width=100) #width=450  , use_column_width='auto'
+
+#     st.write('')
+#     st.markdown('''<h5 style='text-align: left; color: black;'>Вакансии, подходящие по направлению обучения:</h5>''', unsafe_allow_html=True)
+#     st.write('')
+#     st.write(f'[Ссылка на вакансию]({list_of_vacancies[0]})')
+    
+# else:
+#     pass
 
 
 
