@@ -73,6 +73,9 @@ if choose_university:
     # ВЫБОР НАПРАВЛЕНИЯ:
     list_of_direction_of_study = sorted(list(main_table.loc[main_table['Место обучения']==choose_university[0]].reset_index()['Направление'].unique()), reverse=False)
     # list_of_direction_of_study = sorted(list(main_table[main_table['Направление'].notnull()]['Направление'].unique()), reverse=False)
+    if 'Безопасность сферы государственных услуг' in list_of_direction_of_study:
+        list_of_direction_of_study.remove('Безопасность сферы государственных услуг')
+        list_of_direction_of_study.append('Безопасность сферы государственных услуг')
     choose_direction_of_study = st.multiselect(('Выберите направление подготовки'), list_of_direction_of_study)
 
     if choose_direction_of_study:
