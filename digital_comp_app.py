@@ -128,7 +128,7 @@ if choose_direction_of_study:
     list_of_profiles= sorted(list(main_table.loc[(main_table['Направление']==choose_direction_of_study[0])].reset_index()['Профиль'].unique()), reverse=False)
     # list_of_profiles= sorted(list(main_table.loc[(main_table['Место обучения']==choose_university[0]) & (main_table['Направление']==choose_direction_of_study[0])].reset_index()['Профиль'].unique()), reverse=False)
     # st.write(list_of_profiles)
-    choose_profile = st.multiselect(('Выберите профиль'), list_of_profiles)
+    choose_profile = st.multiselect(('Выберите профиль:'), list_of_profiles)
     if choose_profile:
 
         #-------------------ВЫБОР ПРОФЕССИИ-------------------:
@@ -143,25 +143,28 @@ if choose_direction_of_study:
             unique_professions.remove('')
         elif ' ' in unique_professions:
             unique_professions.remove(' ')
-        choose_profession = st.multiselect(('Выберите профессию'), unique_professions)
+        choose_profession = st.multiselect(('Выберите профессию:'), unique_professions)
 
         if choose_profession:
             # ВЫБОР УНИВЕРСИТЕТА/ВУЗА/...:
             list_of_universities = sorted(list(main_table.loc[(main_table['Направление']==choose_direction_of_study[0]) & (main_table['Профиль']==choose_profile[0]) & (main_table['Профессия'].str.contains(choose_profession[0]))].reset_index()['Место обучения'].unique()), reverse=False)
             # list_of_universities = sorted(list(main_table[main_table['Место обучения'].notnull()]['Место обучения'].unique()), reverse=False)
-            # choose_university = st.multiselect(('Выберите место обучения'), list_of_universities)
+            # choose_university = st.multiselect(('Выберите место обучения:'), list_of_universities)
             
             st.markdown('''<h5 style='text-align: left; color: black;'>Образовательные подразделения РАНХиГС, подходящие вам:</h5>''', unsafe_allow_html=True)
             for university_name in list_of_universities:
                 st.write(university_name)
 
             st.markdown('''<h5 style='text-align: left; color: black;'>Навыки и инструменты, которые вы освоите: </h5>''', unsafe_allow_html=True)
-            # for university_name in list_of_universities:
-            #     st.write(list_of_digit_competences)
             # выводим найденные цифровые компетенции:
+            st.image('digital_competences.jpg',  use_column_width='auto') 
+            # col1, col2 = st.columns([1,1])
             for i in range(len(unique_digit_competences)):
-                st.write(f'{i+1}) {unique_digit_competences[i]}')
+                st.write(f'{i+1}. {unique_digit_competences[i]}')
             st.write('')
+            # col2.write('')
+            # col2.write('')
+            # col2.image('digital_competences.jpg',  use_column_width='auto') #width=450  , use_column_width='auto'  caption='...'
 
 
 
