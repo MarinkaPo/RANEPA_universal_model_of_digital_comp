@@ -67,7 +67,7 @@ main_table = pd.read_excel(open('вспомогательная_таб_для_ц
 list_of_universities = sorted(list(main_table[main_table['Место обучения'].notnull()]['Место обучения'].unique()), reverse=False)
 
 # ВЫБОР УНИВЕРСИТЕТА/ВУЗА/...:
-choose_university = st.multiselect(('Выберите место обучения'), list_of_universities)
+choose_university = st.multiselect(('Выберите место обучения:'), list_of_universities)
 
 if choose_university:
     # ВЫБОР НАПРАВЛЕНИЯ:
@@ -76,7 +76,7 @@ if choose_university:
     if 'Безопасность сферы государственных услуг' in list_of_direction_of_study:
         list_of_direction_of_study.remove('Безопасность сферы государственных услуг')
         list_of_direction_of_study.append('Безопасность сферы государственных услуг')
-    choose_direction_of_study = st.multiselect(('Выберите направление подготовки'), list_of_direction_of_study)
+    choose_direction_of_study = st.multiselect(('Выберите направление подготовки:'), list_of_direction_of_study)
 
     if choose_direction_of_study:
 
@@ -124,7 +124,7 @@ if choose_university:
         # ВЫБОР ПРОФИЛЯ:
         list_of_profiles= sorted(list(main_table.loc[(main_table['Место обучения']==choose_university[0]) & (main_table['Направление']==choose_direction_of_study[0])].reset_index()['Профиль'].unique()), reverse=False)
         # st.write(list_of_profiles)
-        choose_profile = st.multiselect(('Выберите профиль'), list_of_profiles)
+        choose_profile = st.multiselect(('Выберите профиль:'), list_of_profiles)
 
         if choose_profile:
             # ВЫБОР ПРОФЕССИИ:
@@ -138,7 +138,7 @@ if choose_university:
                 unique_professions.remove('')
             elif ' ' in unique_professions:
                 unique_professions.remove(' ')
-            choose_profession = st.multiselect(('Выберите профессию'), unique_professions)
+            choose_profession = st.multiselect(('Выберите профессию:'), unique_professions)
 
             # ВЫБОР КЕЙСОВ ДЛЯ ОБУЧЕНИЯ:
             if choose_profession:
@@ -182,9 +182,14 @@ if choose_university != [] and choose_direction_of_study != [] and choose_profil
 
     st.markdown('''<h5 style='text-align: left; color: black;'>Навыки и инструменты, которые вы освоите: </h5>''', unsafe_allow_html=True)
     # выводим найденные цифровые компетенции:
+    st.image('digital_competences.jpg',  use_column_width='auto') 
+    # col1, col2 = st.columns([1,1])
     for i in range(len(unique_digit_competences)):
-        st.write(f'{i+1}) {unique_digit_competences[i]}')
+        st.write(f'{i+1}. {unique_digit_competences[i]}')
     st.write('')
+    # col2.write('')
+    # col2.write('')
+    # col2.image('digital_competences.jpg',  use_column_width='auto') #width=450 
 
     # выводим найденные кейсы:
     st.markdown('''<h5 style='text-align: left; color: black;'>Образовательные кейсы, подходящие по направлению обучения:</h5>''', unsafe_allow_html=True)
